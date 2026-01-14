@@ -1,0 +1,49 @@
+# Binaries
+/bin/
+/build/
+/dist/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Go cache & modules
+/pkg/
+vendor/
+
+# Go test output
+*.test
+
+# Logs & runtime
+*.log
+*.pid
+*.out
+
+# Dependency / tools
+coverage.txt
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# Config / secrets (可視情況)
+.env
+.env.*
+config.yaml
+config.yml
+config.local.yaml
+credentials.json
+
+# Docker stuff (optional)
+docker-compose.override.yml
+
+# Cloud providers (optional)
+*.pem
+*.key
+*.crt
