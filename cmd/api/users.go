@@ -13,6 +13,41 @@ type userKey string
 
 const userCtx userKey = "user"
 
+// ActivateUser godoc
+//
+//	@Summary		Activate user
+//	@Description	Activate user with activation token
+//	@Tags			users
+//	@Accept			json
+//	@Produce		json
+//	@Param			token	path	string	true	"Activation token"
+//	@Success		204
+//	@Failure		400	{object}	error
+//	@Failure		404	{object}	error
+//	@Failure		500	{object}	error
+//	@Router			/users/activate/{token} [put]
+func (app *application) activateUserHandler(w http.ResponseWriter, r *http.Request) {
+	token := chi.URLParam(r, "token")
+
+	ctx := r.Context()
+
+	err := app.store.Users.Activate(ctx, token)
+	if err != nil {
+		switch err {
+		case store.ErrNotFound:
+			app.notFoundError(w, r, err)
+		default:
+			app.internalServerError(w, r, err)
+		}
+		return
+	}
+
+	if err := app.jsonResponse(w, http.StatusNoContent, nil); err != nil {
+		app.internalServerError(w, r, err)
+		return
+	}
+}
+
 // GetUser godoc
 //
 //	@Summary		Get user

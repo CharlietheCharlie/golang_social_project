@@ -17,6 +17,6 @@ func main() {
 	// Initialize the storage layer
 	store := store.NewStorage(conn)
 
-	db.Seed(store)
+	db.Seed(store, conn)
 
 }
