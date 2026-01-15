@@ -6,10 +6,10 @@ import (
 )
 
 type User struct {
-	ID       int64  `json:"id"`
-	Username string `json:"username"`
-	Email    string `json:"email"`
-	Password string `json:"-"` // omit password in JSON responses
+	ID        int64  `json:"id"`
+	Username  string `json:"username"`
+	Email     string `json:"email"`
+	Password  string `json:"-"` // omit password in JSON responses
 	CreatedAt string `json:"created_at"`
 }
 
@@ -25,15 +25,15 @@ func (s *UserStore) Create(ctx context.Context, user *User) error {
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
 	defer cancel()
 
-	err := s.db.QueryRowContext(  
-		ctx, 
+	err := s.db.QueryRowContext(
+		ctx,
 		query,
 		user.Username,
 		user.Email,
 		user.Password,
 	).Scan(
 		&user.ID,
-		&user.CreatedAt, 
+		&user.CreatedAt,
 	)
 
 	if err != nil {
@@ -49,7 +49,7 @@ func (s *UserStore) GetByID(ctx context.Context, id int64) (*User, error) {
 		FROM users
 		WHERE id = $1
 	`
-	
+
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
 	defer cancel()
 
@@ -63,7 +63,7 @@ func (s *UserStore) GetByID(ctx context.Context, id int64) (*User, error) {
 	)
 
 	if err != nil {
-		switch err{
+		switch err {
 		case sql.ErrNoRows:
 			return nil, ErrNotFound
 		default:

@@ -8,13 +8,13 @@ import (
 )
 
 type PaginatedFeedQuery struct {
-	Limit  int      `json:"limit" validate:"gte=1,lte=20"`
-	Offset int      `json:"offset" validate:"gte=0"`
-	Sort   string   `json:"sort" validate:"oneof=asc desc"`
-	Tags   []string `json:"tags" validate:"max=5"`
-	Search string   `json:"search" validate:"max=100"`
-	Since  *time.Time   `json:"since"`
-	Until  *time.Time   `json:"until"`
+	Limit  int        `json:"limit" validate:"gte=1,lte=20"`
+	Offset int        `json:"offset" validate:"gte=0"`
+	Sort   string     `json:"sort" validate:"oneof=asc desc"`
+	Tags   []string   `json:"tags" validate:"max=5"`
+	Search string     `json:"search" validate:"max=100"`
+	Since  *time.Time `json:"since"`
+	Until  *time.Time `json:"until"`
 }
 
 func (fq PaginatedFeedQuery) Parse(r *http.Request) (PaginatedFeedQuery, error) {

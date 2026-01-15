@@ -5,7 +5,6 @@ import (
 	"strconv"
 )
 
-
 func GetString(key, fallback string) string {
 	val, ok := os.LookupEnv(key)
 	if !ok {
@@ -25,4 +24,3 @@ func GetInt(key string, fallback int) int {
 	}
 	return val
 }
-

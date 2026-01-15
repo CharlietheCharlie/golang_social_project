@@ -27,7 +27,7 @@ func (s *FollowerStore) Follow(ctx context.Context, followerID, userID int64) er
 	defer cancel()
 
 	_, err := s.db.ExecContext(ctx, query, followerID, userID)
-	
+
 	if err != nil {
 		if pgErr, ok := err.(*pq.Error); ok {
 			if pgErr.Code == "23505" { // unique_violation

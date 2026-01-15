@@ -110,7 +110,6 @@ func Seed(store store.Storage) {
 
 	log.Println("Database seeding completed successfully.")
 
-
 }
 
 func generateUsers(n int) []*store.User {
