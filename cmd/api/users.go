@@ -20,11 +20,11 @@ const userCtx userKey = "user"
 //	@Tags			users
 //	@Accept			json
 //	@Produce		json
-//	@Param			token	path	string	true	"Activation token"
-//	@Success		204
-//	@Failure		400	{object}	error
-//	@Failure		404	{object}	error
-//	@Failure		500	{object}	error
+//	@Param			token	path		string	true	"Activation token"
+//	@Success		204		{object}	nil
+//	@Failure		400		{object}	error
+//	@Failure		404		{object}	error
+//	@Failure		500		{object}	error
 //	@Router			/users/activate/{token} [put]
 func (app *application) activateUserHandler(w http.ResponseWriter, r *http.Request) {
 	token := chi.URLParam(r, "token")
