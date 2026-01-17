@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"net/http"
+	"social/internal/auth"
 	"social/internal/mailer"
 	"social/internal/store"
 	"time"
@@ -17,10 +18,11 @@ import (
 )
 
 type application struct {
-	config config
-	store  store.Storage
-	logger *zap.SugaredLogger
-	mailer mailer.Client
+	config        config
+	store         store.Storage
+	logger        *zap.SugaredLogger
+	mailer        mailer.Client
+	authenticator auth.Authenticator
 }
 
 type config struct {
@@ -30,6 +32,7 @@ type config struct {
 	apiURL      string
 	mail        mailConfig
 	frontendURL string
+	auth        authConfig
 }
 
 type dbConfig struct {
@@ -37,6 +40,22 @@ type dbConfig struct {
 	maxOpenConns int
 	maxIdleConns int
 	maxIdleTime  string
+}
+
+type authConfig struct {
+	basic basicConfig
+	token tokenConfig
+}
+
+type basicConfig struct {
+	username string
+	password string
+}
+
+type tokenConfig struct {
+	secret string
+	exp    time.Duration
+	iss    string
 }
 
 type mailConfig struct {
@@ -78,7 +97,7 @@ func (app *application) mount() http.Handler {
 	r.Use(middleware.Timeout(60 * time.Second)) // set a timeout for requests
 
 	r.Route("/v1", func(r chi.Router) { // use Router to group routes
-		r.Get("/health", app.healthCheckHandler)
+		r.With(app.BasicAuthMiddleware()).Get("/health", app.healthCheckHandler)
 
 		docsURL := fmt.Sprintf("%s/swagger/doc.json", app.config.addr)
 		r.Get("/swagger/*", httpSwagger.Handler(httpSwagger.URL(docsURL)))
@@ -119,6 +138,7 @@ func (app *application) mount() http.Handler {
 		// Public routes
 		r.Route("/auth", func(r chi.Router) {
 			r.Post("/user", app.registerUserHandler)
+			r.Post("/token", app.createTokenHandler)
 		})
 	})
 

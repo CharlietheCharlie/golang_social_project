@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"social/internal/auth"
 	"social/internal/db"
 	"social/internal/env"
 	"social/internal/mailer"
@@ -58,6 +59,17 @@ func main() {
 				apiKey: env.GetString("MAILTRAP_API_KEY", ""),
 			},
 		},
+		auth: authConfig{
+			basic: basicConfig{
+				username: env.GetString("AUTH_BASIC_USERNAME", "admin"),
+				password: env.GetString("AUTH_BASIC_PASSWORD", "admin"),
+			},
+			token: tokenConfig{
+				secret: env.GetString("AUTH_TOKEN_SECRET", "secret"),
+				exp:    time.Hour * 24 * 3, // 3 days
+				iss:    "social",
+			},
+		},
 	}
 
 	// Logger
@@ -86,12 +98,20 @@ func main() {
 	if err != nil {
 		logger.Fatal(err)
 	}
+
+	// Initialize the authenticator
+	jwtAuthenticator := auth.NewJWTAuthenticator(
+		cfg.auth.token.secret,
+		cfg.auth.token.iss, //aud
+		cfg.auth.token.iss, //iss
+	)
 	// Initialize a new application struct
 	app := &application{
-		config: cfg,
-		store:  store,
-		logger: logger,
-		mailer: mailtrap,
+		config:        cfg,
+		store:         store,
+		logger:        logger,
+		mailer:        mailtrap,
+		authenticator: jwtAuthenticator,
 	}
 
 	// Mount the routes
