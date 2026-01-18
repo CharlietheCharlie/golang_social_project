@@ -40,9 +40,11 @@ func (app *application) createCommentHandler(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
+	user := getUserFromContext(r)
+
 	comment := &store.Comment{
 		PostID:  post.ID,
-		UserID:  1, // TODO: Replace with the authenticated user's ID
+		UserID:  user.ID,
 		Content: payload.Content,
 	}
 

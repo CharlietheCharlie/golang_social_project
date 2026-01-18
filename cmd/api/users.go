@@ -88,11 +88,14 @@ func (app *application) getUserHandler(w http.ResponseWriter, r *http.Request) {
 //	@Router			/users/{id}/follow [post]
 func (app *application) followUserHandler(w http.ResponseWriter, r *http.Request) {
 	followerUser := getUserFromContext(r)
-
+	followedID, err := strconv.ParseInt(chi.URLParam(r, "userID"), 10, 64)
+	if err != nil {
+		app.badRequestError(w, r, err)
+		return
+	}
 	ctx := r.Context()
 
-	// TODO: Replace 1 with the authenticated user's ID
-	if err := app.store.Followers.Follow(ctx, followerUser.ID, 1); err != nil {
+	if err := app.store.Followers.Follow(ctx, followerUser.ID, followedID); err != nil {
 		switch err {
 		case store.ErrConflict:
 			app.conflictError(w, r, err)
@@ -126,10 +129,15 @@ func (app *application) followUserHandler(w http.ResponseWriter, r *http.Request
 func (app *application) unfollowUserHandler(w http.ResponseWriter, r *http.Request) {
 	followerUser := getUserFromContext(r)
 
+	followedID, err := strconv.ParseInt(chi.URLParam(r, "userID"), 10, 64)
+	if err != nil {
+		app.badRequestError(w, r, err)
+		return
+	}
+
 	ctx := r.Context()
 
-	// TODO: Replace 1 with the authenticated user's ID
-	if err := app.store.Followers.Unfollow(ctx, followerUser.ID, 1); err != nil {
+	if err := app.store.Followers.Unfollow(ctx, followerUser.ID, followedID); err != nil {
 		app.internalServerError(w, r, err)
 		return
 	}

@@ -103,6 +103,7 @@ func (app *application) mount() http.Handler {
 		r.Get("/swagger/*", httpSwagger.Handler(httpSwagger.URL(docsURL)))
 
 		r.Route("/posts", func(r chi.Router) {
+			r.Use(app.AuthTokenMiddleware)
 			r.Post("/", app.createPostHandler)
 			r.Route("/{postID}", func(r chi.Router) {
 				r.Use(app.postsContextMiddleware) // middleware to load post from database
@@ -121,7 +122,7 @@ func (app *application) mount() http.Handler {
 			r.Put("/activate/{token}", app.activateUserHandler)
 
 			r.Route("/{userID}", func(r chi.Router) {
-				r.Use(app.usersContextMiddleware) // middleware to load user from database
+				r.Use(app.AuthTokenMiddleware)
 
 				r.Get("/", app.getUserHandler)
 
@@ -130,6 +131,7 @@ func (app *application) mount() http.Handler {
 			})
 
 			r.Group(func(r chi.Router) {
+				r.Use(app.AuthTokenMiddleware)
 				r.Get("/feed", app.getUserfeedHandler)
 			})
 

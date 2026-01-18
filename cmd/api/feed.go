@@ -45,7 +45,9 @@ func (app *application) getUserfeedHandler(w http.ResponseWriter, r *http.Reques
 	}
 
 	ctx := r.Context()
-	feed, err := app.store.Posts.GetUserFeed(ctx, int64(1), fq) // TODO: replace 1 with authenticated user ID
+
+	user := getUserFromContext(r)
+	feed, err := app.store.Posts.GetUserFeed(ctx, int64(user.ID), fq)
 	if err != nil {
 		app.internalServerError(w, r, err)
 		return
