@@ -73,6 +73,10 @@ definitions:
         type: integer
       is_activated:
         type: boolean
+      role:
+        $ref: '#/definitions/store.Role'
+      role_id:
+        type: integer
       token:
         type: string
       username:
@@ -121,6 +125,17 @@ definitions:
         description: for optimistic concurrency control
         type: integer
     type: object
+  store.Role:
+    properties:
+      description:
+        type: string
+      id:
+        type: integer
+      level:
+        type: integer
+      name:
+        type: string
+    type: object
   store.User:
     properties:
       created_at:
@@ -131,6 +146,10 @@ definitions:
         type: integer
       is_activated:
         type: boolean
+      role:
+        $ref: '#/definitions/store.Role'
+      role_id:
+        type: integer
       username:
         type: string
     type: object
@@ -323,7 +342,7 @@ paths:
       summary: Get post
       tags:
       - posts
-    put:
+    patch:
       consumes:
       - application/json
       description: Update post by ID

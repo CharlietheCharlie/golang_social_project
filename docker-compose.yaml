@@ -14,5 +14,24 @@ services:
       # Persists data on the host machine
       - db-data:/var/lib/postgresql/data
 
+  redis:
+    image: redis:8.2.3-alpine
+    restart: unless-stopped
+    container_name: social-redis
+    ports:
+      - "6379:6379"
+    command: redis-server --save 60 1 --loglevel warning
+
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: social-redis-commander
+    restart: unless-stopped
+    ports:
+      - "8081:8081"
+    environment:
+      - REDIS_HOSTS=local:redis:6379
+    depends_on:
+      - redis
+
 volumes:
   db-data:

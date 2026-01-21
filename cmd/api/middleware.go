@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"net/http"
+	"social/internal/store"
 	"strconv"
 	"strings"
 
@@ -43,7 +44,7 @@ func (app *application) AuthTokenMiddleware(next http.Handler) http.Handler {
 		}
 
 		ctx := r.Context()
-		user, err := app.store.Users.GetByID(ctx, userID)
+		user, err := app.getUser(ctx, userID)
 		if err != nil {
 			app.unauthroizedError(w, r, err)
 			return
@@ -87,4 +88,60 @@ func (app *application) BasicAuthMiddleware() func(http.Handler) http.Handler {
 			next.ServeHTTP(w, r)
 		})
 	}
+}
+
+func (app *application) checkPostOwnership(requiredRole string, next http.HandlerFunc) http.HandlerFunc {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		user := getUserFromContext(r)
+		post := getPostFromContext(r)
+		// if it is the user's post
+		if user.ID == post.UserID {
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		// role precedence check
+		allowed, err := app.checkRolePrecedence(r.Context(), user, requiredRole)
+		if err != nil {
+			app.internalServerError(w, r, err)
+			return
+		}
+
+		if !allowed {
+			app.forbiddenError(w, r, fmt.Errorf("forbidden"))
+			return
+		}
+		next.ServeHTTP(w, r)
+	})
+}
+
+func (app *application) checkRolePrecedence(ctx context.Context, user *store.User, requiredRole string) (bool, error) {
+	role, err := app.store.Roles.GetByName(ctx, requiredRole)
+
+	if err != nil {
+		return false, err
+	}
+	return user.Role.Level >= role.Level, nil // check if the user's role is greater than or equal to the required role
+}
+
+func (app *application) getUser(ctx context.Context, userID int64) (*store.User, error) {
+
+	if !app.config.redisCfg.enabled {
+		return app.store.Users.GetByID(ctx, userID)
+	}
+
+	user, err := app.cacheStorage.Users.Get(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+	if user == nil {
+		user, err = app.store.Users.GetByID(ctx, userID)
+		if err != nil {
+			return nil, err
+		}
+		if err = app.cacheStorage.Users.Set(ctx, user); err != nil {
+			return nil, err
+		}
+	}
+	return user, nil
 }

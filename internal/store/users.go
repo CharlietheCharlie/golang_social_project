@@ -24,6 +24,8 @@ type User struct {
 	Password    password `json:"-"` // omit password in JSON responses
 	CreatedAt   string   `json:"created_at"`
 	IsActivated bool     `json:"is_activated"`
+	RoleId      int64    `json:"role_id"`
+	Role        Role     `json:"role"`
 }
 
 type password struct {
@@ -51,11 +53,16 @@ type UserStore struct {
 
 func (s *UserStore) Create(ctx context.Context, tx *sql.Tx, user *User) error {
 	query := `
-		INSERT INTO users (username, email, password) 
-		VALUES ($1, $2, $3) RETURNING id, created_at
+		INSERT INTO users (username, email, password, role_id) 
+		VALUES ($1, $2, $3, (SELECT id FROM roles WHERE name = $4)) RETURNING id, created_at
 	`
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
 	defer cancel()
+
+	role := user.Role.Name
+	if role == "" {
+		role = "user"
+	}
 
 	err := tx.QueryRowContext(
 		ctx,
@@ -63,6 +70,7 @@ func (s *UserStore) Create(ctx context.Context, tx *sql.Tx, user *User) error {
 		user.Username,
 		user.Email,
 		user.Password.hash,
+		role,
 	).Scan(
 		&user.ID,
 		&user.CreatedAt,
@@ -85,9 +93,10 @@ func (s *UserStore) Create(ctx context.Context, tx *sql.Tx, user *User) error {
 
 func (s *UserStore) GetByID(ctx context.Context, id int64) (*User, error) {
 	query := `
-		SELECT id, username, email, password, created_at
+		SELECT users.id, username, email, password, created_at, roles.*
 		FROM users
-		WHERE id = $1 AND is_activated = true
+		JOIN roles ON users.role_id = roles.id 
+		WHERE users.id = $1 AND is_activated = true
 	`
 
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
@@ -97,9 +106,13 @@ func (s *UserStore) GetByID(ctx context.Context, id int64) (*User, error) {
 	err := s.db.QueryRowContext(ctx, query, id).Scan(
 		&user.ID,
 		&user.Username,
-		&user.Password.hash,
 		&user.Email,
+		&user.Password.hash,
 		&user.CreatedAt,
+		&user.Role.ID,
+		&user.Role.Name,
+		&user.Role.Level,
+		&user.Role.Description,
 	)
 
 	if err != nil {
@@ -128,8 +141,8 @@ func (s *UserStore) GetByEmail(ctx context.Context, email string) (*User, error)
 	err := s.db.QueryRowContext(ctx, query, email).Scan(
 		&user.ID,
 		&user.Username,
-		&user.Password.hash,
 		&user.Email,
+		&user.Password.hash,
 		&user.CreatedAt,
 	)
 

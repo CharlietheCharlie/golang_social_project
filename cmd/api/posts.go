@@ -120,7 +120,7 @@ type UpdatePostPayload struct {
 //	@Failure		404		{object}	error
 //	@Failure		500		{object}	error
 //	@Security		ApiKeyAuth
-//	@Router			/posts/{id} [put]
+//	@Router			/posts/{id} [patch]
 func (app *application) updatePostHandler(w http.ResponseWriter, r *http.Request) {
 	post := getPostFromContext(r)
 
